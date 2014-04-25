@@ -320,6 +320,6 @@ function DrawGame()
 			GraphicsContext.fillText((Cars[i] == MyCar ? "Me" : Cars[i].Name.substring(0, 10)), Cars[i].X | 0, Cars[i].Y | 0);
     }
 	GraphicsContext.fillStyle = "green";
-	GraphicsContext.fillText("You are dead...",BattleField.width/2,BattleField.height/2);
+	GraphicsContext.fillText("Marauder's Map!",BattleField.width/2,BattleField.height/2);
 	}
 }

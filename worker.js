@@ -3,12 +3,28 @@ var HTTP = require("http");
 var WebSocketServer = require("websocket").server;
 var Game = require("./game.js");
 var fs = require('fs');
-var Memcached = require('memcached');
-var memcached = new Memcached('localhost:11211');
-var memcached1 = new Memcached('localhost:11212');
-var memcached2 = new Memcached('localhost:11213');
-var memcachedcluster = [memcached, memcached1, memcached2];
-var lifetime = 86400; //24hrs
+
+var mongoose = require('mongoose');
+var mongoDB = require('mongodb').Db;
+var mongoServer = require('mongodb').Server;
+
+var db = new mongoDB('test', new mongoServer('10.32.106.149', 27017));
+	mongoose.connect('mongodb://10.32.106.149/test');
+	db.on('error', console.error.bind(console, 'connection error:'));
+	db.once('open', function callback () {});
+var playerSchema = mongoose.Schema({
+	    Name: String,
+	    GameRecords: Number,
+		X: Number,
+        Y: Number,
+        VX: Number,
+        VY: Number,
+        OR: Number,
+        humanzombie: Number,
+        alive: Number,
+        distance: Number
+		});
+var player = mongoose.model('player', playerSchema);
 
 var Frame = 0;
 var FramesPerGameStateTransmission = 3;
@@ -114,16 +130,23 @@ function HandleClientMessage(ID, Message)
 		// Handshake.
 		case "HI":
 
-            memcached.get(Message.Data.toString().substring(0, 10),function(err,theCar){
-                if(err){console.log("db error");}
-                if(theCar==false){
-                    spawn(C, Message, 1);
-                }
-                else{
-                    spawn(C, Message, 0);
-                }
-
-
+            player.findOne({ Name:Message.Data.toString().substring(0, 10) },function(err, theCar){
+                if(err)
+				{
+					console.log("Mongodb Error!");
+				}
+				else
+				{
+					if (!theCar)
+					{
+						spawn(C, Message, 1, 0);
+					}
+					else
+					{
+						D = theCar.distance;
+						spawn(C, Message, 0, D);
+					}
+				}
             });
 			break;
 			
@@ -150,7 +173,7 @@ function HandleClientMessage(ID, Message)
 	}
 }
 
-function spawn(C, Message, type){
+function spawn(C, Message, type, D){
     if (C.Car) return;
     if(type==1){
         C.Car =
@@ -180,8 +203,24 @@ function spawn(C, Message, type){
             RetrieveDB(C.Car);
         }
         else{
-             retrieveById(Message.Data.toString().substring(0, 10),C);
-
+			//retrieveById(Message.Data.toString().substring(0, 10),C);
+			C.Car =
+			{
+				X: Math.random() * (320-50),
+				Y: Math.random() * (480-100),
+				VX: 0,
+				VY: 0,
+				OR: 0,
+				// Put a reasonable length restriction on usernames, which will be displayed to all players.
+				Name: Message.Data.toString().substring(0, 10),
+				// Flag for this player being human or zombie
+				humanzombie: Math.floor(Math.random() * 2),
+				// Flag for this player being alive or not
+				alive: 1,//Math.floor(Math.random() * 2)
+				distance: D
+			};
+			C.KeysPressed=0;
+			UpdateDB(C.Car);
         }
 
     }
@@ -190,58 +229,108 @@ function spawn(C, Message, type){
 
 function UpdateDB(oneCar)
 {
-	
-	/*var DB = fs.readFileSync("./Database.json");
-  try { var DataBase = JSON.parse(DB); }
-	catch (Err) { return; }
-
-	if (typeof DataBase[Name] === "undefined") {
-		DataBase[Name] = 1;
-	}	else {
-		DataBase[Name] += 1;	
-	}
-	
-	fs.writeFileSync("./Database.json", JSON.stringify(DataBase, null, 4));*/
-memcached.set(oneCar.Name, {X: oneCar.X, Y: oneCar.Y, VX: oneCar.VX, VY: oneCar.VY, OR: oneCar.OR, humanzombie: oneCar.humanzombie, alive: oneCar.alive, distance: oneCar.distance}, lifetime, function( err, result ){
-  if( err ) console.error( err );
-  //console.dir( result );
-    //console.log("Database updated!" );
-});
+	player.findOne({ Name:oneCar.Name },function(err, oldplayer){
+		if (err){
+			console.log("Mongodb findOne error!");
+		}
+		else
+		{
+			if(!oldplayer)
+			{
+				var onePlayer = new player({ 
+					Name: oneCar.Name,
+					GameRecords: 1,
+					X: oneCar.X,
+					Y: oneCar.Y,
+					VX: oneCar.VX,
+					VY: oneCar.VY,
+					OR: oneCar.OR,
+					humanzombie: oneCar.humanzombie,
+					alive: oneCar.alive,
+					distance: oneCar.distance
+				})	
+				onePlayer.save(function(err){
+					if (err)	
+						return console.error(err);
+				})
+			}
+			else
+			{
+				oldplayer.X = oneCar.X;
+				oldplayer.Y = oneCar.Y;
+				oldplayer.VX = oneCar.VX;
+				oldplayer.VY = oneCar.VY;
+				oldplayer.OR = oneCar.OR;
+				oldplayer.humanzombie = oneCar.humanzombie;
+				oldplayer.alive = oneCar.alive;
+				oldplayer.distance = oneCar.distance;
+				oldplayer.save(function(err){
+					if (err)	
+						return console.error(err);
+				})
+			}				
+		}	
+	});
 }
 
 function RetrieveDB(oneCar)
 {
-memcached.get(oneCar.Name, function( err, result ){
-  if( err ) console.error( err );
-  console.log( result.X );
-oneCar.X = result.X;
-oneCar.Y = result.Y; 
-oneCar.VX = result.VX; 
-oneCar.VY = result.VY;
-oneCar.OR = result.OR; 
-oneCar.humanzombie = result.humanzombie; 
-oneCar.alive = result.alive;
-oneCar.distance = result.distance;
-});
-    console.log("Data retrieved!" );		
+	console.log("Start function Retrive!");
+	player.findOne({ Name:oneCar.Name },function(err, oldplayer){
+		if (err){
+			console.log("Mongodb findOne error!");
+		}
+		else
+		{
+			if(!oldplayer)
+			{
+				
+			}
+			else
+			{
+				oneCar.X = oldplayer.X;
+				oneCar.Y = oldplayer.Y;
+				oneCar.VX = oldplayer.VX;
+				oneCar.VY = oldplayer.VY;
+				oneCar.OR = oldplayer.OR;
+				oneCar.humanzombie = oldplayer.humanzombie;
+				oneCar.alive = oldplayer.alive;
+				oneCar.distance = oldplayer.distance;
+				console.log("Data retrieved!" );
+			}				
+		}	
+	});		
 }
 
 function retrieveById(id,C){
-    memcached.get(id, function(err, result ){
-        if (err) console.log("db error");
-        tempCar=result;
-        tempCar.X= Math.random() * (320-50);
-        tempCar.Y= Math.random() * (480-100);
-        tempCar.VX=0;
-        tempCar.VY=0;
-        tempCar.OR=0;
-        tempCar.humanzombie= Math.floor(Math.random() * 2);
-        tempCar.alive=1;
-        C.Car=tempCar;
-        C.KeysPressed=0;
-
-
-    });
+	console.log("Start function retrieveById!");
+    player.findOne({ Name:id },function(err, oldplayer){
+		if (err){
+			console.log("Mongodb findOne error!");
+		}
+		else
+		{
+			if(!oldplayer)
+			{
+				
+			}
+			else
+			{
+				tempCar=[];
+				tempCar.X = oldplayer.X;
+				tempCar.Y = oldplayer.Y;
+				tempCar.VX = oldplayer.VX;
+				tempCar.VY = oldplayer.VY;
+				tempCar.OR = oldplayer.OR;
+				tempCar.humanzombie = oldplayer.humanzombie;
+				tempCar.alive = 1;
+				tempCar.distance = oldplayer.distance;
+				C.Car=tempCar;
+				C.KeysPressed=0;
+			}				
+		}	
+	});
+	console.log(C.Car.alive);
 }
 
 	 
@@ -348,12 +437,7 @@ function orderedSend(oneCar, index){
             send(oneCar, index+1);
 
         });
-
     }
-
-
-
-
 }
 
 function send(oneCar){
