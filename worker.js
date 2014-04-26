@@ -4,14 +4,31 @@ var WebSocketServer = require("websocket").server;
 var Game = require("./game.js");
 var fs = require('fs');
 
+var async = require('async');
+
 var mongoose = require('mongoose');
 var mongoDB = require('mongodb').Db;
 var mongoServer = require('mongodb').Server;
 
-var db = new mongoDB('test', new mongoServer('10.32.106.149', 27017));
-	mongoose.connect('mongodb://10.32.106.149/test');
-	db.on('error', console.error.bind(console, 'connection error:'));
-	db.once('open', function callback () {});
+var db = new mongoDB('test1', new mongoServer('10.32.20.116', 27017));
+//mongoose.connect('mongodb://10.32.20.116/test');
+db.on('error', console.error.bind(console, 'connection error:'));
+db.once('open', function callback () {});
+
+var db = new mongoDB('test2', new mongoServer('10.32.20.116', 27017));
+//mongoose.connect('mongodb://10.32.20.116/test');
+db.on('error', console.error.bind(console, 'connection error:'));
+db.once('open', function callback () {});
+
+var db = new mongoDB('test3', new mongoServer('10.32.20.116', 27017));
+//mongoose.connect('mongodb://10.32.20.116/test');
+db.on('error', console.error.bind(console, 'connection error:'));
+db.once('open', function callback () {});
+
+var conn1 = mongoose.createConnection('mongodb://10.32.20.116/test1');
+var conn2 = mongoose.createConnection('mongodb://10.32.20.116/test2');
+var conn3 = mongoose.createConnection('mongodb://10.32.20.116/test3');
+
 var playerSchema = mongoose.Schema({
 	    Name: String,
 	    GameRecords: Number,
@@ -24,7 +41,11 @@ var playerSchema = mongoose.Schema({
         alive: Number,
         distance: Number
 		});
-var player = mongoose.model('player', playerSchema);
+//var player = mongoose.model('player', playerSchema);
+
+var player1 = conn1.model('player', playerSchema);
+var player2 = conn2.model('player', playerSchema);
+var player3 = conn3.model('player', playerSchema);
 
 var Frame = 0;
 var FramesPerGameStateTransmission = 3;
@@ -130,7 +151,7 @@ function HandleClientMessage(ID, Message)
 		// Handshake.
 		case "HI":
 
-            player.findOne({ Name:Message.Data.toString().substring(0, 10) },function(err, theCar){
+            player1.findOne({ Name:Message.Data.toString().substring(0, 10) },function(err, theCar){
                 if(err)
 				{
 					console.log("Mongodb Error!");
@@ -200,7 +221,34 @@ function spawn(C, Message, type, D){
             C.Car=Message.Details;
             C.Car.Name= Message.Data.toString().substring(0, 10);
             C.KeysPressed=0;
-            RetrieveDB(C.Car);
+            //RetrieveDB(C.Car);
+			console.log("Start findOne!");
+			player1.findOne({ Name:C.Car.Name },function(err, oldplayer){
+				if (err){
+					console.log("Mongodb findOne error!");
+				}
+				else
+				{
+					if(!oldplayer)
+					{
+						
+					}
+					else
+					{
+						C.Car.X = oldplayer.X;
+						C.Car.Y = oldplayer.Y;
+						C.Car.VX = oldplayer.VX;
+						C.Car.VY = oldplayer.VY;
+						C.Car.OR = oldplayer.OR;
+						C.Car.humanzombie = oldplayer.humanzombie;
+						C.Car.alive = oldplayer.alive;
+						C.Car.distance = oldplayer.distance;
+						console.log("Data retrieved!" );
+						
+						
+					}				
+				}	
+			});
         }
         else{
 			//retrieveById(Message.Data.toString().substring(0, 10),C);
@@ -229,7 +277,7 @@ function spawn(C, Message, type, D){
 
 function UpdateDB(oneCar)
 {
-	player.findOne({ Name:oneCar.Name },function(err, oldplayer){
+	player1.findOne({ Name:oneCar.Name },function(err, oldplayer){
 		if (err){
 			console.log("Mongodb findOne error!");
 		}
@@ -237,7 +285,91 @@ function UpdateDB(oneCar)
 		{
 			if(!oldplayer)
 			{
-				var onePlayer = new player({ 
+				var onePlayer = new player1({ 
+					Name: oneCar.Name,
+					GameRecords: 1,
+					X: oneCar.X,
+					Y: oneCar.Y,
+					VX: oneCar.VX,
+					VY: oneCar.VY,
+					OR: oneCar.OR,
+					humanzombie: oneCar.humanzombie,
+					alive: oneCar.alive,
+					distance: oneCar.distance
+				})	
+				onePlayer.save(function(err){
+					if (err)	
+						return console.error(err);
+				})
+			}
+			else
+			{
+				oldplayer.X = oneCar.X;
+				oldplayer.Y = oneCar.Y;
+				oldplayer.VX = oneCar.VX;
+				oldplayer.VY = oneCar.VY;
+				oldplayer.OR = oneCar.OR;
+				oldplayer.humanzombie = oneCar.humanzombie;
+				oldplayer.alive = oneCar.alive;
+				oldplayer.distance = oneCar.distance;
+				oldplayer.save(function(err){
+					if (err)	
+						return console.error(err);
+				})
+			}				
+		}	
+	});
+	player2.findOne({ Name:oneCar.Name },function(err, oldplayer){
+		if (err){
+			console.log("Mongodb findOne error!");
+		}
+		else
+		{
+			if(!oldplayer)
+			{
+				var onePlayer = new player2({ 
+					Name: oneCar.Name,
+					GameRecords: 1,
+					X: oneCar.X,
+					Y: oneCar.Y,
+					VX: oneCar.VX,
+					VY: oneCar.VY,
+					OR: oneCar.OR,
+					humanzombie: oneCar.humanzombie,
+					alive: oneCar.alive,
+					distance: oneCar.distance
+				})	
+				onePlayer.save(function(err){
+					if (err)	
+						return console.error(err);
+				})
+			}
+			else
+			{
+				oldplayer.X = oneCar.X;
+				oldplayer.Y = oneCar.Y;
+				oldplayer.VX = oneCar.VX;
+				oldplayer.VY = oneCar.VY;
+				oldplayer.OR = oneCar.OR;
+				oldplayer.humanzombie = oneCar.humanzombie;
+				oldplayer.alive = oneCar.alive;
+				oldplayer.distance = oneCar.distance;
+				oldplayer.save(function(err){
+					if (err)	
+						return console.error(err);
+				})
+			}				
+		}	
+	});
+	player3.findOne({ Name:oneCar.Name },function(err, oldplayer){
+		if (err){
+			console.log("Mongodb findOne error!");
+		}
+		else
+		{
+			if(!oldplayer)
+			{
+				var onePlayer = new player3({ 
 					Name: oneCar.Name,
 					GameRecords: 1,
 					X: oneCar.X,
@@ -276,7 +408,7 @@ function UpdateDB(oneCar)
 function RetrieveDB(oneCar)
 {
 	console.log("Start function Retrive!");
-	player.findOne({ Name:oneCar.Name },function(err, oldplayer){
+	player1.findOne({ Name:oneCar.Name },function(err, oldplayer){
 		if (err){
 			console.log("Mongodb findOne error!");
 		}
@@ -302,9 +434,11 @@ function RetrieveDB(oneCar)
 	});		
 }
 
-function retrieveById(id,C){
-	console.log("Start function retrieveById!");
-    player.findOne({ Name:id },function(err, oldplayer){
+function retrieveById(id,C)
+{
+	async.series([
+	console.log("Start function retrieveById!"),
+    player1.findOne({ Name:id },function(err, oldplayer){
 		if (err){
 			console.log("Mongodb findOne error!");
 		}
@@ -329,8 +463,11 @@ function retrieveById(id,C){
 				C.KeysPressed=0;
 			}				
 		}	
+	}),
+	console.log(C.Car.alive)],
+	function (err, results) {
+    console.log(results);
 	});
-	console.log(C.Car.alive);
 }
 
 	 
