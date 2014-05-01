@@ -32,14 +32,14 @@ var conn3 = mongoose.createConnection('mongodb://10.32.20.116/test3');
 var playerSchema = mongoose.Schema({
 	    Name: String,
 	    GameRecords: Number,
-			X: Number,
-      Y: Number,
-      VX: Number,
-      VY: Number,
-      OR: Number,
-      humanzombie: Number,
-      alive: Number,
-      distance: Number
+		X: Number,
+        Y: Number,
+        VX: Number,
+        VY: Number,
+        OR: Number,
+        humanzombie: Number,
+        alive: Number,
+        distance: Number
 		});
 //var player = mongoose.model('player', playerSchema);
 
