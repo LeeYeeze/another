@@ -3,14 +3,13 @@ var HTTP = require("http");
 var WebSocketServer = require("websocket").server;
 var Game = require("./game.js");
 var fs = require('fs');
-
-var async = require('async');
+	
 
 var mongoose = require('mongoose');
 var mongoDB = require('mongodb').Db;
 var mongoServer = require('mongodb').Server;
 
-var db = new mongoDB('test1', new mongoServer('10.32.106.72', 27017));
+var db = new mongoDB('test1', new mongoServer('localhost', 27017));
 //mongoose.connect('mongodb://10.32.20.116/test');
 db.on('error', console.error.bind(console, 'connection error:'));
 db.once('open', function callback () {});
@@ -20,7 +19,7 @@ var db = new mongoDB('test2', new mongoServer('localhost', 27017));
 db.on('error', console.error.bind(console, 'connection error:'));
 db.once('open', function callback () {});
 
-var db = new mongoDB('test3', new mongoServer('10.32.106.72', 27017));
+var db = new mongoDB('test3', new mongoServer('localhost', 27017));
 //mongoose.connect('mongodb://10.32.20.116/test');
 db.on('error', console.error.bind(console, 'connection error:'));
 db.once('open', function callback () {});
@@ -29,7 +28,7 @@ var conn1good=1;
 var conn2good=1;
 var conn3good=1;
 var options = { server: { socketOptions: { connectTimeoutMS: 3000 }}};
-var conn1 = mongoose.createConnection('mongodb://10.32.106.72/test1',options);
+var conn1 = mongoose.createConnection('mongodb://localhost/test1',options);
 conn1.on('error',function(err){
 	if(err)
 	{
