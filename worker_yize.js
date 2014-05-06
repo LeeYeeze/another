@@ -1,79 +1,16 @@
-﻿var os = require('os');
+var os = require('os');
 var ifaces=os.networkInterfaces();
 var net = require('net');
 var HTTP = require("http");
 var WebSocketServer = require("websocket").server;
 var Game = require("./game.js");
 var fs = require('fs');
+var lifetime = 86400; //24hrs
 var port=8001;
-
-var mongoose = require('mongoose');
-var mongoDB = require('mongodb').Db;
-var mongoServer = require('mongodb').Server;
-
-var db1 = new mongoDB('test1', new mongoServer('localhost', 27017));
-db1.on('error', console.error.bind(console, 'connection error:'));
-db1.once('open', function callback () {});
-
-var db2 = new mongoDB('test2', new mongoServer('10.32.37.124', 27017));
-db2.on('error', console.error.bind(console, 'connection error:'));
-db2.once('open', function callback () {});
-
-var db3 = new mongoDB('test3', new mongoServer('10.32.106.60', 27017));
-db3.on('error', console.error.bind(console, 'connection error:'));
-db3.once('open', function callback () {});
-
-var conn1good=1;
-var conn2good=1;
-var conn3good=1;
-var options = { server: { socketOptions: { connectTimeoutMS: 3000 }}};
-var conn1 = mongoose.createConnection('mongodb://localhost/test1',options);
-conn1.on('error',function(err){
-	if(err)
-	{
-		conn1good=0;
-		console.log("conn1 createConnection error!");
-		conn1.db.close();
-	}
-});
-var conn2 = mongoose.createConnection('mongodb://10.32.37.124/test2',options);
-conn2.on('error',function(err){
-	if(err)
-	{
-		conn2good=0;
-		console.log("conn2 createConnection error!");
-		conn2.db.close();
-	}
-});
-var conn3 = mongoose.createConnection('mongodb://10.32.106.60/test3',options);
-conn3.on('error',function(err){
-	if(err)
-	{
-		conn3good=0;
-		console.log("conn3 createConnection error!");
-		conn3.db.close();
-	}
-});
-
-var playerSchema = mongoose.Schema({
-	    Name: String,
-	    GameRecords: Number,
-		X: Number,
-        Y: Number,
-        VX: Number,
-        VY: Number,
-        OR: Number,
-        humanzombie: Number,
-        alive: Number,
-        distance: Number
-		});
-//var player = mongoose.model('player', playerSchema);
-var player1 = conn1.model('player', playerSchema);
-var player2 = conn2.model('player', playerSchema);
-var player3 = conn3.model('player', playerSchema);
-
+var Memcached = require('memcached');
+var memcached = new Memcached('localhost:11211');
 var myRank = 0;
-var mastersArray =[{"port":8181, "host":'10.32.106.60'},{"port":8182, "host":'10.32.106.60'},{"port":8183, "host":'10.32.106.60'}];
+var mastersArray =[{"port":8181, "host":'127.0.0.1'},{"port":8182, "host":'127.0.0.1'},{"port":8183, "host":'127.0.0.1'}];
 var Frame = 0;
 var FramesPerGameStateTransmission = 3;
 var MaxConnections = 10;
@@ -86,7 +23,7 @@ var HTTPServer = HTTP.createServer(
 			}
 			);
 // createConnection
-ifaces['无线网络连接'].forEach(function(details){
+ifaces['en0'].forEach(function(details){
 
     if(details.family=='IPv4'){
         console.log(details.address);
@@ -227,75 +164,17 @@ function HandleClientMessage(ID, Message)
 		// Handshake.
 		case "HI":
 
-            if(conn1good==1)
-			{
-				player1.findOne({ Name:Message.Data.toString().substring(0, 10) },function(err, theCar){
-					if(err)
-					{
-						console.log("Mongodb Error!");
-					}
-					else
-					{
-						if (!theCar)
-						{
-							spawn(C, Message, 1, 0);
-						}
-						else
-						{
-							D = theCar.distance;
-							spawn(C, Message, 0, D);
-						}
-					}
-				});
-			}
-			else
-			{
-				if(conn2good==1)
-				{
-					player2.findOne({ Name:Message.Data.toString().substring(0, 10) },function(err, theCar){
-						if(err)
-						{
-							console.log("Mongodb Error!");
-						}
-						else
-						{
-							if (!theCar)
-							{
-								spawn(C, Message, 1, 0);
-							}
-							else
-							{
-								D = theCar.distance;
-								spawn(C, Message, 0, D);
-							}
-						}
-					});
-				}
-				else
-				{
-					if(conn3good==1)
-					{
-						player1.findOne({ Name:Message.Data.toString().substring(0, 10) },function(err, theCar){
-							if(err)
-							{
-								console.log("Mongodb Error!");
-							}
-							else
-							{
-								if (!theCar)
-								{
-									spawn(C, Message, 1, 0);
-								}
-								else
-								{
-									D = theCar.distance;
-									spawn(C, Message, 0, D);
-								}
-							}
-						});
-					}
-				}
-			}
+            memcached.get(Message.Data.toString().substring(0, 10),function(err,theCar){
+                if(err){console.log("db error");}
+                if(theCar==false){
+                    spawn(C, Message, 1);
+                }
+                else{
+                    spawn(C, Message, 0);
+                }
+
+
+            });
 			break;
 			
 		// Key up.
@@ -348,115 +227,11 @@ function spawn(C, Message, type){
             C.Car=Message.Details;
             C.Car.Name= Message.Data.toString().substring(0, 10);
             C.KeysPressed=0;
-            //RetrieveDB(C.Car);
-			console.log("Start findOne!");
-			if(conn1good==1)
-			{
-				player1.findOne({ Name:C.Car.Name },function(err, oldplayer){
-					if (err){
-						console.log("Mongodb player1 findOne error!");
-					}
-					else
-					{
-						if(!oldplayer)
-						{
-							
-						}
-						else
-						{
-							C.Car.X = oldplayer.X;
-							C.Car.Y = oldplayer.Y;
-							C.Car.VX = oldplayer.VX;
-							C.Car.VY = oldplayer.VY;
-							C.Car.OR = oldplayer.OR;
-							C.Car.humanzombie = oldplayer.humanzombie;
-							C.Car.alive = oldplayer.alive;
-							C.Car.distance = oldplayer.distance;
-							console.log("Data retrieved!" );
-						}				
-					}	
-				});
-			}
-			else
-			{
-				if(conn2good==1)
-				{
-					player2.findOne({ Name:C.Car.Name },function(err, oldplayer){
-						if (err){
-							console.log("Mongodb player2 findOne error!");
-						}
-						else
-						{
-							if(!oldplayer)
-							{
-								
-							}
-							else
-							{
-								C.Car.X = oldplayer.X;
-								C.Car.Y = oldplayer.Y;
-								C.Car.VX = oldplayer.VX;
-								C.Car.VY = oldplayer.VY;
-								C.Car.OR = oldplayer.OR;
-								C.Car.humanzombie = oldplayer.humanzombie;
-								C.Car.alive = oldplayer.alive;
-								C.Car.distance = oldplayer.distance;
-								console.log("Data retrieved!" );
-							}				
-						}	
-					});
-				}
-				else
-				{
-					if(conn3good==1)
-					{
-						player3.findOne({ Name:C.Car.Name },function(err, oldplayer){
-							if (err){
-								console.log("Mongodb player2 findOne error!");
-							}
-							else
-							{
-								if(!oldplayer)
-								{
-									
-								}
-								else
-								{
-									C.Car.X = oldplayer.X;
-									C.Car.Y = oldplayer.Y;
-									C.Car.VX = oldplayer.VX;
-									C.Car.VY = oldplayer.VY;
-									C.Car.OR = oldplayer.OR;
-									C.Car.humanzombie = oldplayer.humanzombie;
-									C.Car.alive = oldplayer.alive;
-									C.Car.distance = oldplayer.distance;
-									console.log("Data retrieved!" );
-								}				
-							}	
-						});
-					}
-				}
-			}
+            RetrieveDB(C.Car);
         }
         else{
-			//retrieveById(Message.Data.toString().substring(0, 10),C);
-			C.Car =
-			{
-				X: Math.random() * (320-50),
-				Y: Math.random() * (480-100),
-				VX: 0,
-				VY: 0,
-				OR: 0,
-				// Put a reasonable length restriction on usernames, which will be displayed to all players.
-				Name: Message.Data.toString().substring(0, 10),
-				// Flag for this player being human or zombie
-				humanzombie: Math.floor(Math.random() * 2),
-				// Flag for this player being alive or not
-				alive: 1,//Math.floor(Math.random() * 2)
-				distance: D
-			};
-			C.KeysPressed=0;
-			UpdateDB(C.Car);
+             retrieveById(Message.Data.toString().substring(0, 10),C);
+
         }
 
     }
@@ -465,149 +240,58 @@ function spawn(C, Message, type){
 
 function UpdateDB(oneCar)
 {
-	if(conn1good==1)
-	{
-		player1.findOne({ Name:oneCar.Name },function(err, oldplayer){
-			if (err){
-				console.log("Mongodb findOne error!");
-			}
-			else
-			{
-				if(!oldplayer)
-				{
-					var onePlayer = new player1({ 
-						Name: oneCar.Name,
-						GameRecords: 1,
-						X: oneCar.X,
-						Y: oneCar.Y,
-						VX: oneCar.VX,
-						VY: oneCar.VY,
-						OR: oneCar.OR,
-						humanzombie: oneCar.humanzombie,
-						alive: oneCar.alive,
-						distance: oneCar.distance
-					})	
-					onePlayer.save(function(err){
-						if (err)	
-							return console.error(err);
-					})
-				}
-				else
-				{
-					oldplayer.X = oneCar.X;
-					oldplayer.Y = oneCar.Y;
-					oldplayer.VX = oneCar.VX;
-					oldplayer.VY = oneCar.VY;
-					oldplayer.OR = oneCar.OR;
-					oldplayer.humanzombie = oneCar.humanzombie;
-					oldplayer.alive = oneCar.alive;
-					oldplayer.distance = oneCar.distance;
-					oldplayer.save(function(err){
-						if (err)	
-							return console.error(err);
-					})
-				}				
-			}	
-		});
+	
+	/*var DB = fs.readFileSync("./Database.json");
+  try { var DataBase = JSON.parse(DB); }
+	catch (Err) { return; }
+
+	if (typeof DataBase[Name] === "undefined") {
+		DataBase[Name] = 1;
+	}	else {
+		DataBase[Name] += 1;	
 	}
-	if(conn2good==1)
-	{
-		player2.findOne({ Name:oneCar.Name },function(err, oldplayer){
-			if (err){
-				console.log("Mongodb findOne error!");
-			}
-			else
-			{
-				if(!oldplayer)
-				{
-					var onePlayer = new player2({ 
-						Name: oneCar.Name,
-						GameRecords: 1,
-						X: oneCar.X,
-						Y: oneCar.Y,
-						VX: oneCar.VX,
-						VY: oneCar.VY,
-						OR: oneCar.OR,
-						humanzombie: oneCar.humanzombie,
-						alive: oneCar.alive,
-						distance: oneCar.distance
-					})	
-					onePlayer.save(function(err){
-						if (err)	
-							return console.error(err);
-					})
-				}
-				else
-				{
-					oldplayer.X = oneCar.X;
-					oldplayer.Y = oneCar.Y;
-					oldplayer.VX = oneCar.VX;
-					oldplayer.VY = oneCar.VY;
-					oldplayer.OR = oneCar.OR;
-					oldplayer.humanzombie = oneCar.humanzombie;
-					oldplayer.alive = oneCar.alive;
-					oldplayer.distance = oneCar.distance;
-					oldplayer.save(function(err){
-						if (err)	
-							return console.error(err);
-					})
-				}				
-			}	
-		});
-	}
-	if(conn3good==1)
-	{
-		player3.findOne({ Name:oneCar.Name },function(err, oldplayer){
-			if (err){
-				console.log("Mongodb findOne error!");
-			}
-			else
-			{
-				if(!oldplayer)
-				{
-					var onePlayer = new player3({ 
-						Name: oneCar.Name,
-						GameRecords: 1,
-						X: oneCar.X,
-						Y: oneCar.Y,
-						VX: oneCar.VX,
-						VY: oneCar.VY,
-						OR: oneCar.OR,
-						humanzombie: oneCar.humanzombie,
-						alive: oneCar.alive,
-						distance: oneCar.distance
-					})	
-					onePlayer.save(function(err){
-						if (err)	
-							return console.error(err);
-					})
-				}
-				else
-				{
-					oldplayer.X = oneCar.X;
-					oldplayer.Y = oneCar.Y;
-					oldplayer.VX = oneCar.VX;
-					oldplayer.VY = oneCar.VY;
-					oldplayer.OR = oneCar.OR;
-					oldplayer.humanzombie = oneCar.humanzombie;
-					oldplayer.alive = oneCar.alive;
-					oldplayer.distance = oneCar.distance;
-					oldplayer.save(function(err){
-						if (err)	
-							return console.error(err);
-					})
-				}				
-			}	
-		});
-	}
+	
+	fs.writeFileSync("./Database.json", JSON.stringify(DataBase, null, 4));*/
+memcached.set(oneCar.Name, {X: oneCar.X, Y: oneCar.Y, VX: oneCar.VX, VY: oneCar.VY, OR: oneCar.OR, humanzombie: oneCar.humanzombie, alive: oneCar.alive, distance: oneCar.distance}, lifetime, function( err, result ){
+  if( err ) console.error( err );
+  //console.dir( result );
+    //console.log("Database updated!" );
+});
 }
 
 function RetrieveDB(oneCar)
 {
+memcached.get(oneCar.Name, function( err, result ){
+  if( err ) console.error( err );
+  console.log( result.X );
+oneCar.X = result.X;
+oneCar.Y = result.Y; 
+oneCar.VX = result.VX; 
+oneCar.VY = result.VY;
+oneCar.OR = result.OR; 
+oneCar.humanzombie = result.humanzombie; 
+oneCar.alive = result.alive;
+oneCar.distance = result.distance;
+});
+    console.log("Data retrieved!" );		
 }
 
-function retrieveById(id,C)
-{
+function retrieveById(id,C){
+    memcached.get(id, function(err, result ){
+        if (err) console.log("db error");
+        tempCar=result;
+        tempCar.X= Math.random() * (320-50);
+        tempCar.Y= Math.random() * (480-100);
+        tempCar.VX=0;
+        tempCar.VY=0;
+        tempCar.OR=0;
+        tempCar.humanzombie= Math.floor(Math.random() * 2);
+        tempCar.alive=1;
+        C.Car=tempCar;
+        C.KeysPressed=0;
+
+
+    });
 }
 
 	 

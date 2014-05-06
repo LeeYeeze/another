@@ -1,34 +1,33 @@
+﻿var os = require('os');
+var ifaces=os.networkInterfaces();
 var net = require('net');
 var HTTP = require("http");
 var WebSocketServer = require("websocket").server;
 var Game = require("./game.js");
 var fs = require('fs');
-	
+var port=8001;
 
 var mongoose = require('mongoose');
 var mongoDB = require('mongodb').Db;
 var mongoServer = require('mongodb').Server;
 
-var db = new mongoDB('test1', new mongoServer('localhost', 27017));
-//mongoose.connect('mongodb://10.32.20.116/test');
-db.on('error', console.error.bind(console, 'connection error:'));
-db.once('open', function callback () {});
+var db1 = new mongoDB('test1', new mongoServer('10.32.106.60', 27017));
+db1.on('error', console.error.bind(console, 'connection error:'));
+db1.once('open', function callback () {});
 
-var db = new mongoDB('test2', new mongoServer('localhost', 27017));
-//mongoose.connect('mongodb://10.32.20.116/test');
-db.on('error', console.error.bind(console, 'connection error:'));
-db.once('open', function callback () {});
+var db2 = new mongoDB('test2', new mongoServer('10.32.37.124', 27017));
+db2.on('error', console.error.bind(console, 'connection error:'));
+db2.once('open', function callback () {});
 
-var db = new mongoDB('test3', new mongoServer('localhost', 27017));
-//mongoose.connect('mongodb://10.32.20.116/test');
-db.on('error', console.error.bind(console, 'connection error:'));
-db.once('open', function callback () {});
+var db3 = new mongoDB('test3', new mongoServer('10.32.37.124', 27017));
+db3.on('error', console.error.bind(console, 'connection error:'));
+db3.once('open', function callback () {});
 
 var conn1good=1;
 var conn2good=1;
 var conn3good=1;
 var options = { server: { socketOptions: { connectTimeoutMS: 3000 }}};
-var conn1 = mongoose.createConnection('mongodb://localhost/test1',options);
+var conn1 = mongoose.createConnection('mongodb://10.32.106.60/test1',options);
 conn1.on('error',function(err){
 	if(err)
 	{
@@ -37,7 +36,7 @@ conn1.on('error',function(err){
 		conn1.db.close();
 	}
 });
-var conn2 = mongoose.createConnection('mongodb://localhost/test2',options);
+var conn2 = mongoose.createConnection('mongodb://10.32.37.124/test2',options);
 conn2.on('error',function(err){
 	if(err)
 	{
@@ -46,7 +45,7 @@ conn2.on('error',function(err){
 		conn2.db.close();
 	}
 });
-var conn3 = mongoose.createConnection('mongodb://localhost/test3',options);
+var conn3 = mongoose.createConnection('mongodb://10.32.37.124/test3',options);
 conn3.on('error',function(err){
 	if(err)
 	{
@@ -73,6 +72,8 @@ var player1 = conn1.model('player', playerSchema);
 var player2 = conn2.model('player', playerSchema);
 var player3 = conn3.model('player', playerSchema);
 
+var myRank = 0;
+var mastersArray =[{"port":8181, "host":'10.32.106.60'},{"port":8182, "host":'10.32.106.60'},{"port":8183, "host":'10.32.106.60'}];
 var Frame = 0;
 var FramesPerGameStateTransmission = 3;
 var MaxConnections = 10;
@@ -85,28 +86,77 @@ var HTTPServer = HTTP.createServer(
 			}
 			);
 // createConnection
-var tcpConnection = net.createConnection({port: 8181, host:'127.0.0.1'},
-// connectListener callback
-    function() {
-        console.log('connection successful');
+ifaces['无线网络连接'].forEach(function(details){
+
+    if(details.family=='IPv4'){
+        console.log(details.address);
+        setupWorkerMasterRelation(details,0);
+
+
+
+    }
 });
 
-tcpConnection.on('data', function(data){
-	var message= JSON.parse(data);
-	if("rank" in message){
-		console.log(message.rank);
-		if(message.rank==1){
-			setupGameServer();
-		}
-	}
-	else if("connects" in message){
-		Connections=message.connects;
-		console.log("new state");
-	}
-});
+
+function setupWorkerMasterRelation(details, tracker){
+    tracker= tracker%mastersArray.length;
+    var tcpConnection = net.createConnection({port: mastersArray[tracker].port, host: mastersArray[tracker].host},
+// connectListener callback
+        function() {
+            console.log('connection successful');
+            //tcpConnection.write();
+            if(myRank==1){
+                tcpConnection.write(JSON.stringify({serverAd: details.address, rank:1}));
+
+
+            }
+            else{
+                tcpConnection.write(JSON.stringify({serverAd: details.address}));
+
+            }
+
+
+
+
+        });
+
+    tcpConnection.on('data', function(data){
+        //TODO: A bug need to be fixed here
+        var message= JSON.parse(data);
+        if("rank" in message){
+            console.log(message.rank);
+
+            if(message.rank==1&&myRank!=1){
+                setupGameServer();
+            }
+            myRank=message.rank;
+        }
+        else if("connects" in message){
+            Connections=message.connects;
+            console.log("new state");
+        }
+    });
+
+    tcpConnection.on('error', function(){
+        console.log("Something bad happened");
+
+    });
+
+
+    tcpConnection.on('close', function(){
+        console.log("Something bad happened 2");
+        setupWorkerMasterRelation(details, tracker+1);
+
+
+
+    });
+
+}
+
+
 
 function setupGameServer(){
-	HTTPServer.listen(8001, function() { console.log("Listening for connections on port 8001"); });
+	HTTPServer.listen(port, function() { console.log("Listening for connections on port "+port); });
 
 // Creates a WebSocketServer using the HTTP server just created.
 var Server = new WebSocketServer(
@@ -271,7 +321,7 @@ function HandleClientMessage(ID, Message)
 	}
 }
 
-function spawn(C, Message, type, D){
+function spawn(C, Message, type){
     if (C.Car) return;
     if(type==1){
         C.Car =
@@ -293,8 +343,7 @@ function spawn(C, Message, type, D){
         UpdateDB(C.Car);
 
     }
-    else
-	{
+    else{
         if("Details" in Message){
             C.Car=Message.Details;
             C.Car.Name= Message.Data.toString().substring(0, 10);
@@ -416,7 +465,6 @@ function spawn(C, Message, type, D){
 
 function UpdateDB(oneCar)
 {
-	//console.log(conn1good);
 	if(conn1good==1)
 	{
 		player1.findOne({ Name:oneCar.Name },function(err, oldplayer){
@@ -556,67 +604,10 @@ function UpdateDB(oneCar)
 
 function RetrieveDB(oneCar)
 {
-	console.log("Start function Retrive!");
-	player1.findOne({ Name:oneCar.Name },function(err, oldplayer){
-		if (err){
-			console.log("Mongodb findOne error!");
-		}
-		else
-		{
-			if(!oldplayer)
-			{
-				
-			}
-			else
-			{
-				oneCar.X = oldplayer.X;
-				oneCar.Y = oldplayer.Y;
-				oneCar.VX = oldplayer.VX;
-				oneCar.VY = oldplayer.VY;
-				oneCar.OR = oldplayer.OR;
-				oneCar.humanzombie = oldplayer.humanzombie;
-				oneCar.alive = oldplayer.alive;
-				oneCar.distance = oldplayer.distance;
-				console.log("Data retrieved!" );
-			}				
-		}	
-	});		
 }
 
 function retrieveById(id,C)
 {
-	async.series([
-	console.log("Start function retrieveById!"),
-    player1.findOne({ Name:id },function(err, oldplayer){
-		if (err){
-			console.log("Mongodb findOne error!");
-		}
-		else
-		{
-			if(!oldplayer)
-			{
-				
-			}
-			else
-			{
-				tempCar=[];
-				tempCar.X = oldplayer.X;
-				tempCar.Y = oldplayer.Y;
-				tempCar.VX = oldplayer.VX;
-				tempCar.VY = oldplayer.VY;
-				tempCar.OR = oldplayer.OR;
-				tempCar.humanzombie = oldplayer.humanzombie;
-				tempCar.alive = 1;
-				tempCar.distance = oldplayer.distance;
-				C.Car=tempCar;
-				C.KeysPressed=0;
-			}				
-		}	
-	}),
-	console.log(C.Car.alive)],
-	function (err, results) {
-    console.log(results);
-	});
 }
 
 	 
@@ -723,7 +714,12 @@ function orderedSend(oneCar, index){
             send(oneCar, index+1);
 
         });
+
     }
+
+
+
+
 }
 
 function send(oneCar){

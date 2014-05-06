@@ -45,8 +45,8 @@ var HTTPServer = http.createServer(
         var filePath=false;
         if(request.url=='/')
 		{
-			userconunt=Math.random();
-			if (usercount<0.5)
+            console.log('usercount is '+ usercount);
+			if (usercount==0)
 			{
 				filePath='index1.html';
 			}
@@ -55,7 +55,11 @@ var HTTPServer = http.createServer(
 				filePath='index2.html';
 			}
 			usercount++;
-    }
+			if (usercount==2)
+			{
+				usercount=0;
+			}
+        }
 		else
 		{
             filePath=request.url;
