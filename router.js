@@ -5,7 +5,7 @@ var mime=require("mime");
 var WebSocketServer = require("websocket").server;
 var net=require("net");
 var cache={};
-var usercount=0;
+var usercount;
 
 function send404(response){
     response.writeHead(404,{'Content-Type':'text/plain'});
@@ -43,23 +43,30 @@ var HTTPServer = http.createServer(
     function(request, response)
     {
         var filePath=false;
-        if(request.url=='/')
-		{
-			userconunt=Math.random();
-			if (usercount<0.5)
-			{
-				filePath='index1.html';
-			}
-			else
-			{
-				filePath='index2.html';
-			}
-			usercount++;
-    }
-		else
-		{
-            filePath=request.url;
+        if(request.url=='/1')
+				{
+//			userconunt=Math.random();
+//			console.log(usercount);
+//			console.log(Math.random());
+//			if (usercount<0.5)
+			//if(Math.random()<0.5)
+			//{
+				//filePath='index1.html';
+			//}
+			//else
+			//{
+				//filePath='index2.html';
+			//}
+			  	filePath='index1.html';
         }
+				else if(request.url=='/2')
+				{
+					filePath='index2.html';
+				}
+				else
+				{
+            filePath=request.url;
+      	}
         var absPath='./'+filePath;
         serveStatic(response, cache, absPath);
     }

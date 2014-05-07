@@ -2,11 +2,12 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="25c03271-cb38-4884-8c65-13076bff1366" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/client1.js" afterPath="$PROJECT_DIR$/client1.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/client2.js" afterPath="$PROJECT_DIR$/client2.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/master1.js" afterPath="$PROJECT_DIR$/master1.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/master2.js" afterPath="$PROJECT_DIR$/master2.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/master3.js" afterPath="$PROJECT_DIR$/master3.js" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/worker1.js.bak" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/worker2.js.bak" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/client1.js.bak" afterPath="$PROJECT_DIR$/client1.js.bak" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/client2.js.bak" afterPath="$PROJECT_DIR$/client2.js.bak" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/router.js.bak" afterPath="$PROJECT_DIR$/router.js.bak" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/router.js" afterPath="$PROJECT_DIR$/router.js" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/worker1.js" afterPath="$PROJECT_DIR$/worker1.js" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/worker2.js" afterPath="$PROJECT_DIR$/worker2.js" />
     </list>
@@ -40,7 +41,7 @@
       <file leaf-file-name="worker1.js" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/worker1.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="121" column="68" selection-start="3432" selection-end="3432" vertical-scroll-proportion="0.0">
+            <state line="684" column="64" selection-start="16965" selection-end="16965" vertical-scroll-proportion="0.0">
               <folding />
             </state>
           </provider>
@@ -49,7 +50,7 @@
       <file leaf-file-name="worker2.js" pinned="false" current="true" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/worker2.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="129" column="66" selection-start="3427" selection-end="3427" vertical-scroll-proportion="0.02529511">
+            <state line="695" column="33" selection-start="16977" selection-end="16977" vertical-scroll-proportion="17.580101">
               <folding />
             </state>
           </provider>
@@ -121,8 +122,8 @@
         <option value="$PROJECT_DIR$/master2.js" />
         <option value="$PROJECT_DIR$/master1.js" />
         <option value="$PROJECT_DIR$/master3.js" />
-        <option value="$PROJECT_DIR$/worker2.js" />
         <option value="$PROJECT_DIR$/worker1.js" />
+        <option value="$PROJECT_DIR$/worker2.js" />
       </list>
     </option>
   </component>
@@ -316,14 +317,14 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/worker1.js">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="121" column="68" selection-start="3432" selection-end="3432" vertical-scroll-proportion="0.0">
+        <state line="684" column="64" selection-start="16965" selection-end="16965" vertical-scroll-proportion="0.0">
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/worker2.js">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="129" column="66" selection-start="3427" selection-end="3427" vertical-scroll-proportion="0.02529511">
+        <state line="695" column="33" selection-start="16977" selection-end="16977" vertical-scroll-proportion="17.580101">
           <folding />
         </state>
       </provider>
