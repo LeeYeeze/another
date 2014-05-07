@@ -715,37 +715,5 @@ function ObjectSize(Obj)
 	return Size;
 }
 
-function orderedSend(oneCar, index){
-    if (index<memcachedcluster.length){
-        memcachedcluster[index].set(oneCar.Name, {X: oneCar.X, Y: oneCar.Y, VX: oneCar.VX, VY: oneCar.VY, OR: oneCar.OR, humanzombie: oneCar.humanzombie, alive: oneCar.alive, distance: oneCar.distance}, lifetime, function( err, result ){
-            if( err ) console.error( err );
-            send(oneCar, index+1);
 
-        });
-
-    }
-
-
-
-
-}
-
-function send(oneCar){
-    for (mem in memcachedcluster){
-        mem.set(oneCar.Name, {X: oneCar.X, Y: oneCar.Y, VX: oneCar.VX, VY: oneCar.VY, OR: oneCar.OR, humanzombie: oneCar.humanzombie, alive: oneCar.alive, distance: oneCar.distance}, lifetime, function( err, result ){
-            if( err ) console.error( err );
-        });
-    }
-}
-
-function safeSendOrdered(){
-
-
-
-
-}
-
-function safeSendQuick(){
-
-}
 }
