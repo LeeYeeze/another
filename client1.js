@@ -10,7 +10,7 @@ var KEY_CODES={37:'left', 38:'up', 39:'right', 40:'down', 32:'fire'};
 var keys=[];
 var BattleField;
 var hostArray=new Array(" ","10.32.37.124:8002","10.32.37.124:8003","10.32.37.124:8004");
-var masterAddress= ["10.33.137.127:9001", "10.33.137.127:9002", "10.33.137.127:9003"];
+var masterAddress= ["10.33.237.127:9001", "10.33.237.127:9002", "10.33.237.127:9003"];
 var index=0;
 var Name
 var ZombieImg=new Image();

@@ -15,11 +15,11 @@ var db1 = new mongoDB('test1', new mongoServer('10.32.106.222', 27017));
 db1.on('error', console.error.bind(console, 'connection error:'));
 db1.once('open', function callback () {});
 
-var db2 = new mongoDB('test2', new mongoServer('10.32.106.222', 27017));
+var db2 = new mongoDB('test2', new mongoServer('10.32.37.76', 27017));
 db2.on('error', console.error.bind(console, 'connection error:'));
 db2.once('open', function callback () {});
 
-var db3 = new mongoDB('test3', new mongoServer('10.32.106.222', 27017));
+var db3 = new mongoDB('test3', new mongoServer('10.32.37.76', 27017));
 db3.on('error', console.error.bind(console, 'connection error:'));
 db3.once('open', function callback () {});
 
@@ -36,7 +36,7 @@ conn1.on('error',function(err){
 		conn1.db.close();
 	}
 });
-var conn2 = mongoose.createConnection('mongodb://10.32.106.222/test2',options);
+var conn2 = mongoose.createConnection('mongodb://10.32.37.76/test2',options);
 conn2.on('error',function(err){
 	if(err)
 	{
@@ -45,7 +45,7 @@ conn2.on('error',function(err){
 		conn2.db.close();
 	}
 });
-var conn3 = mongoose.createConnection('mongodb://10.32.106.222/test3',options);
+var conn3 = mongoose.createConnection('mongodb://10.32.37.76/test3',options);
 conn3.on('error',function(err){
 	if(err)
 	{
@@ -86,15 +86,12 @@ var HTTPServer = HTTP.createServer(
 			}
 			);
 // createConnection
-ifaces['en0'].forEach(function(details){
+ifaces['无线网络连接'].forEach(function(details){
 
     if(details.family=='IPv4'){
         console.log(details.address);
         details.nickport = port;
         setupWorkerMasterRelation(details,0);
-
-
-
     }
 });
 
@@ -670,12 +667,16 @@ setInterval(function()
 							for (var ID in Connections)
 							{
 								var C2 = Connections[ID];
-								var thiscarx = C2.Car.X + 25;
-								var thiscary = C2.Car.Y + 50;
-								if ((thiscarx>hurtx1) && (thiscarx<hurtx2) && (thiscary>hurty1) && (thiscary<hurty2) && (C.Car.humanzombie != C2.Car.humanzombie))
-								{
-									C2.Car.alive=0;
+								if(!C2.Car){	
 								}
+								else{
+									var thiscarx = C2.Car.X + 25;
+									var thiscary = C2.Car.Y + 50;
+									if ((thiscarx>hurtx1) && (thiscarx<hurtx2) && (thiscary>hurty1) && (thiscary<hurty2) && (C.Car.humanzombie != C2.Car.humanzombie))
+									{
+										C2.Car.alive=0;
+									}		
+								}								
 							}
 						}
 					}
