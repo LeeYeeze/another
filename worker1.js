@@ -90,7 +90,7 @@ var HTTPServer = HTTP.createServer(
 			}
 			);
 // createConnection
-ifaces['无线网络连接'].forEach(function(details){
+ifaces['en0'].forEach(function(details){
 
     if(details.family=='IPv4'){
         console.log(details.address);
