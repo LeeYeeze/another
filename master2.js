@@ -5,6 +5,7 @@ var http = require('http');
 var webSocketServer = require("websocket").server;
 var Connections={};
 var leaderAddress;
+var leaderPort;
 
 
 Array.prototype.remove = function(e) {
@@ -52,12 +53,12 @@ webServer.on('request', function(request){
     Connection.on('message', function(message){
         jMessage=JSON.parse(message.utf8Data);
         if("coco" in jMessage){
-            if (leaderAddress){Connection.sendUTF(JSON.stringify({redirect: leaderAddress}));}
+            if (leaderAddress){Connection.sendUTF(JSON.stringify({redirect: leaderAddress, redirectPort: leaderPort}));}
 
 
         }
         else if("roro" in jMessage){
-            Connection.sendUTF(JSON.stringify({reconnect: leaderAddress}));
+            Connection.sendUTF(JSON.stringify({reconnect: leaderAddress, reconnectPort: leaderPort}));
 
         }
 
@@ -114,7 +115,7 @@ var server = net.createServer(function(connectionListener) {
     connectionListener.on('data', function(tcpMessage){
         var tMessage=JSON.parse(tcpMessage);
         if("serverAd" in tMessage && "rank" in tMessage){
-            var podex = tcpconnections.push({worker:connectionListener, address:tMessage.serverAd});
+            var podex = tcpconnections.push({worker:connectionListener, address:tMessage.serverAd, port: tMessage.serverPt});
             console.log("Connections count "+podex);
             connectionListener.write(JSON.stringify({"rank": podex})+'\n');
 
@@ -122,7 +123,7 @@ var server = net.createServer(function(connectionListener) {
 
         }
         else if("serverAd" in tMessage){
-            var podex = tcpconnections.push({worker:connectionListener, address:tMessage.serverAd});
+            var podex = tcpconnections.push({worker:connectionListener, address:tMessage.serverAd, port: tMessage.serverPt});
             console.log("Connections count "+podex);
             connectionListener.write(JSON.stringify({"rank": podex})+'\n');
 
@@ -181,6 +182,7 @@ function reset(){
 setInterval(function(){
     try{
         leaderAddress = tcpconnections[0].address;
+        leaderPort = tcpconnections[0].port;
 
     }
     catch (e){

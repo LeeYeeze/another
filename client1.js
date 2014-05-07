@@ -69,7 +69,7 @@ function getLeader(){
 
             if ("redirect" in masterMessage){
                 if (masterMessage.redirect){
-                    hostArray[0]=masterMessage.redirect+":8001";
+                    hostArray[0]=masterMessage.redirect+":"+masterMessage.redirectPort;
                     //hostArray[0]="localhost"+":8001";
                     console.log(hostArray[0]);
                     resetSocket(0,0);
@@ -78,7 +78,7 @@ function getLeader(){
 
             }
             else if("reconnect" in masterMessage){
-                hostArray[0]=masterMessage.reconnect+":8001";
+                hostArray[0]=masterMessage.reconnect+":"+masterMessage.reconnectPort;
                 console.log(hostArray[0]);
                 resetSocket(0,1);
 
