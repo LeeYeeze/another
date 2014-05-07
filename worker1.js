@@ -7,19 +7,20 @@ var Game = require("./game.js");
 var fs = require('fs');
 var port=8001;
 
+
 var mongoose = require('mongoose');
 var mongoDB = require('mongodb').Db;
 var mongoServer = require('mongodb').Server;
 
-var db1 = new mongoDB('test1', new mongoServer('10.32.106.222', 27017));
+var db1 = new mongoDB('test1', new mongoServer('10.32.106.236', 27017));
 db1.on('error', console.error.bind(console, 'connection error:'));
 db1.once('open', function callback () {});
 
-var db2 = new mongoDB('test2', new mongoServer('10.32.106.222', 27017));
+var db2 = new mongoDB('test2', new mongoServer('10.32.37.110', 27017));
 db2.on('error', console.error.bind(console, 'connection error:'));
 db2.once('open', function callback () {});
 
-var db3 = new mongoDB('test3', new mongoServer('10.32.106.222', 27017));
+var db3 = new mongoDB('test3', new mongoServer('10.32.37.110', 27017));
 db3.on('error', console.error.bind(console, 'connection error:'));
 db3.once('open', function callback () {});
 
@@ -27,7 +28,7 @@ var conn1good=1;
 var conn2good=1;
 var conn3good=1;
 var options = { server: { socketOptions: { connectTimeoutMS: 3000 }}};
-var conn1 = mongoose.createConnection('mongodb://10.32.106.222/test1',options);
+var conn1 = mongoose.createConnection('mongodb://10.32.106.236/test1',options);
 conn1.on('error',function(err){
 	if(err)
 	{
@@ -36,7 +37,7 @@ conn1.on('error',function(err){
 		conn1.db.close();
 	}
 });
-var conn2 = mongoose.createConnection('mongodb://10.32.106.222/test2',options);
+var conn2 = mongoose.createConnection('mongodb://10.32.37.110/test2',options);
 conn2.on('error',function(err){
 	if(err)
 	{
@@ -45,7 +46,7 @@ conn2.on('error',function(err){
 		conn2.db.close();
 	}
 });
-var conn3 = mongoose.createConnection('mongodb://10.32.106.222/test3',options);
+var conn3 = mongoose.createConnection('mongodb://10.32.37.110/test3',options);
 conn3.on('error',function(err){
 	if(err)
 	{
@@ -73,7 +74,7 @@ var player2 = conn2.model('player', playerSchema);
 var player3 = conn3.model('player', playerSchema);
 
 var myRank = 0;
-var mastersArray =[{"port":8181, "host":'10.33.237.127'},{"port":8182, "host":'10.33.237.127'},{"port":8183, "host":'10.33.237.127'}];
+var mastersArray =[{"port":8181, "host":'10.33.237.73'},{"port":8182, "host":'10.33.237.73'},{"port":8183, "host":'10.33.237.73'}];
 var Frame = 0;
 var FramesPerGameStateTransmission = 3;
 var MaxConnections = 10;
@@ -130,6 +131,7 @@ function setupWorkerMasterRelation(details, tracker){
             if(message.rank==1&&myRank!=1){
                 setupGameServer();
             }
+
             myRank=message.rank;
         }
         else if("connects" in message){
@@ -670,12 +672,18 @@ setInterval(function()
 							for (var ID in Connections)
 							{
 								var C2 = Connections[ID];
+                                if(!C2.Car)
+                                {
+                                }
+                                else
+                                {
 								var thiscarx = C2.Car.X + 25;
 								var thiscary = C2.Car.Y + 50;
 								if ((thiscarx>hurtx1) && (thiscarx<hurtx2) && (thiscary>hurty1) && (thiscary<hurty2) && (C.Car.humanzombie != C2.Car.humanzombie))
 								{
 									C2.Car.alive=0;
 								}
+                                }
 							}
 						}
 					}

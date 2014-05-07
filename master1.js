@@ -58,7 +58,7 @@ webServer.on('request', function(request){
 
         }
         else if("roro" in jMessage){
-            Connection.sendUTF(JSON.stringify({reconnect: leaderAddress, reconnectPort: leaderPort}));
+            if(leaderAddress){Connection.sendUTF(JSON.stringify({reconnect: leaderAddress, reconnectPort: leaderPort}));}
 
         }
 
