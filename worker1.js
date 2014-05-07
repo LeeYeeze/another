@@ -5,7 +5,7 @@ var HTTP = require("http");
 var WebSocketServer = require("websocket").server;
 var Game = require("./game.js");
 var fs = require('fs');
-var port=8002;
+var port=8001;
 
 var mongoose = require('mongoose');
 var mongoDB = require('mongodb').Db;
@@ -73,7 +73,7 @@ var player2 = conn2.model('player', playerSchema);
 var player3 = conn3.model('player', playerSchema);
 
 var myRank = 0;
-var mastersArray =[{"port":8181, "host":'10.32.37.76'},{"port":8182, "host":'10.32.37.76'},{"port":8183, "host":'10.32.37.76'}];
+var mastersArray =[{"port":8181, "host":'10.33.237.127'},{"port":8182, "host":'10.33.237.127'},{"port":8183, "host":'10.33.237.127'}];
 var Frame = 0;
 var FramesPerGameStateTransmission = 3;
 var MaxConnections = 10;

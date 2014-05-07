@@ -5,7 +5,9 @@ var HTTP = require("http");
 var WebSocketServer = require("websocket").server;
 var Game = require("./game.js");
 var fs = require('fs');
-var port=8001;
+
+var port=8002;
+
 
 var mongoose = require('mongoose');
 var mongoDB = require('mongodb').Db;
@@ -15,11 +17,13 @@ var db1 = new mongoDB('test1', new mongoServer('10.32.106.222', 27017));
 db1.on('error', console.error.bind(console, 'connection error:'));
 db1.once('open', function callback () {});
 
-var db2 = new mongoDB('test2', new mongoServer('10.32.106.222', 27017));
+
+var db2 = new mongoDB('test2', new mongoServer('10.32.37.76', 27017));
 db2.on('error', console.error.bind(console, 'connection error:'));
 db2.once('open', function callback () {});
 
-var db3 = new mongoDB('test3', new mongoServer('10.32.106.222', 27017));
+var db3 = new mongoDB('test3', new mongoServer('10.32.37.76', 27017));
+
 db3.on('error', console.error.bind(console, 'connection error:'));
 db3.once('open', function callback () {});
 
@@ -36,7 +40,9 @@ conn1.on('error',function(err){
 		conn1.db.close();
 	}
 });
-var conn2 = mongoose.createConnection('mongodb://10.32.106.222/test2',options);
+
+var conn2 = mongoose.createConnection('mongodb://10.32.37.76/test2',options);
+
 conn2.on('error',function(err){
 	if(err)
 	{
@@ -45,7 +51,9 @@ conn2.on('error',function(err){
 		conn2.db.close();
 	}
 });
-var conn3 = mongoose.createConnection('mongodb://10.32.106.222/test3',options);
+
+var conn3 = mongoose.createConnection('mongodb://10.32.37.76/test3',options);
+
 conn3.on('error',function(err){
 	if(err)
 	{
@@ -73,7 +81,9 @@ var player2 = conn2.model('player', playerSchema);
 var player3 = conn3.model('player', playerSchema);
 
 var myRank = 0;
-var mastersArray =[{"port":8181, "host":'10.33.237.127'},{"port":8182, "host":'10.33.237.127'},{"port":8183, "host":'10.33.237.127'}];
+
+var mastersArray =[{"port":8181, "host":'10.32.37.76'},{"port":8182, "host":'10.32.37.76'},{"port":8183, "host":'10.32.37.76'}];
+
 var Frame = 0;
 var FramesPerGameStateTransmission = 3;
 var MaxConnections = 10;
@@ -86,11 +96,11 @@ var HTTPServer = HTTP.createServer(
 			}
 			);
 // createConnection
-ifaces['en0'].forEach(function(details){
+
+ifaces['无线网络连接'].forEach(function(details){
 
     if(details.family=='IPv4'){
         console.log(details.address);
-        details.nickport = port;
         setupWorkerMasterRelation(details,0);
 
 
@@ -110,9 +120,12 @@ function setupWorkerMasterRelation(details, tracker){
                 tcpConnection.write(JSON.stringify({serverAd: details.address, serverPt: details.nickport, rank:1}));
 
 
+
             }
             else{
+
                 tcpConnection.write(JSON.stringify({serverAd: details.address, serverPt: details.nickport}));
+
 
             }
 
