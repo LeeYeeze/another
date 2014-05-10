@@ -31,7 +31,7 @@ var httpServer = http.createServer(
     }
 );
 
-httpServer.listen(9003, function() { console.log("Listening for connections on port 9001"); });
+httpServer.listen(9003, function() { console.log("Listening for connections on port 9003"); });
 
 var webServer = new webSocketServer(
     {

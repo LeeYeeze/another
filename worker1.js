@@ -89,7 +89,7 @@ var HTTPServer = HTTP.createServer(
 				Response.end();
 			}
 			);
-// createConnection
+//This function is for getting the ip of the worker
 ifaces['en0'].forEach(function(details){
 
     if(details.family=='IPv4'){
@@ -99,7 +99,7 @@ ifaces['en0'].forEach(function(details){
     }
 });
 
-
+//The function below is for message passing between masters and workers
 function setupWorkerMasterRelation(details, tracker){
     tracker= tracker%mastersArray.length;
     var tcpConnection = net.createConnection({port: mastersArray[tracker].port, host: mastersArray[tracker].host},

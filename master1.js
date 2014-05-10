@@ -32,7 +32,7 @@ var httpServer = http.createServer(
 );
 
 httpServer.listen(9001, function() { console.log("Listening for connections on port 9001"); });
-
+//The websocket server is for connections between clients and masters
 var webServer = new webSocketServer(
     {
         httpServer: httpServer,
@@ -49,7 +49,7 @@ webServer.on('request', function(request){
     Connections[id] = Connection;
     console.log(id);
 
-    //console.log(request)
+    //When clients request to connect to the gamen server, feed them back with the right one
     Connection.on('message', function(message){
         jMessage=JSON.parse(message.utf8Data);
         if("coco" in jMessage){
@@ -75,7 +75,7 @@ webServer.on('request', function(request){
 
 
 
-
+//This is the TCP server for connections between master and workers
 var server = net.createServer(function(connectionListener) {
 	var that= this;
     console.log('connected');
@@ -110,7 +110,7 @@ var server = net.createServer(function(connectionListener) {
 		});
 
     });
-
+    //When workers request to join the group, put them at the end of the que and give them their rank in the que
     connectionListener.on('data', function(tcpMessage){
         var tMessage=JSON.parse(tcpMessage);
         if("serverAd" in tMessage && "rank" in tMessage){
@@ -133,7 +133,7 @@ var server = net.createServer(function(connectionListener) {
     });
 	
 	connectionListener.on('close', function(){});
-	
+	// Dealing withe error between master and worker like disconnection
 	connectionListener.on('error', function() {
         console.log('disconnected');
         that.getConnections(function(err, count) {
@@ -150,8 +150,7 @@ var server = net.createServer(function(connectionListener) {
 
     });
 
-    //Write to the connected socket
-    //connectionListener.write('heyyo\r\n');
+    
 	
 });
 server.on('error', function(err) {
@@ -170,7 +169,7 @@ server.on('data', function(data) {
 server.listen(8181, function() {
     console.log('server is listening');
 });
-
+// Give workers back their ranks in the group when changes happen in workers
 function reset(){
 	for(var i=0; i<tcpconnections.length; i++){
 			var temp=i+1;
