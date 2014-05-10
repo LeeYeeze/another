@@ -9,15 +9,15 @@ var GameTimer=null;
 var KEY_CODES={37:'left', 38:'up', 39:'right', 40:'down', 32:'fire'};
 var keys=[];
 var BattleField;
-var hostArray=new Array(" ","10.32.37.124:8002","10.32.37.124:8003","10.32.37.124:8004");
-var masterAddress= ["10.33.237.127:9001", "10.33.237.127:9002", "10.33.237.127:9003"];
+var hostArray=new Array(" ","10.32.106.60:8002","10.32.106.60:8003","10.32.106.60:8004");
+var masterAddress= ["10.32.37.76:9001", "10.32.37.76:9002", "10.32.37.76:9003"];
 var index=0;
 var Name
 var ZombieImg=new Image();
 ZombieImg.src="Zombie-Sprite-Sheet.png";
 var HumanImg=new Image();
 HumanImg.src="Human-Sprite-Sheet.png";
-//This function is used for getting the address of workers from masters
+
 function getLeader(){
     try
     {
@@ -143,7 +143,7 @@ function getLeader(){
 
             if ("redirect" in masterMessage){
                 if (masterMessage.redirect){
-                    hostArray[0]=masterMessage.redirect+":8001";
+                    hostArray[0]=masterMessage.redirect+":8002";
                     //hostArray[0]="localhost"+":8001";
                     console.log(hostArray[0]);
                     resetSocket(0,0);
@@ -152,7 +152,7 @@ function getLeader(){
 
             }
             else if("reconnect" in masterMessage){
-                hostArray[0]=masterMessage.reconnect+":8001";
+                hostArray[0]=masterMessage.reconnect+":8002";
                 console.log(hostArray[0]);
                 resetSocket(0,1);
 
@@ -213,7 +213,7 @@ function getLeader(){
 
             if ("redirect" in masterMessage){
                 if (masterMessage.redirect){
-                    hostArray[0]=masterMessage.redirect+":8001";
+                    hostArray[0]=masterMessage.redirect+":8002";
                     //hostArray[0]="localhost"+":8001";
                     console.log(hostArray[0]);
                     resetSocket(0,0);
@@ -221,7 +221,7 @@ function getLeader(){
 
             }
             else if("reconnect" in masterMessage){
-                hostArray[0]=masterMessage.reconnect+":8001";
+                hostArray[0]=masterMessage.reconnect+":8002";
                 console.log(hostArray[0]);
                 resetSocket(0,1);
 
@@ -244,7 +244,7 @@ function getLeader(){
 
 
 
-//This function is for building connection between client and the right game server when they first log on or reconnect when connections fails
+
 function resetSocket(start, mode)
 {
     try
@@ -371,9 +371,7 @@ function resetSocket(start, mode)
     };
 }
 
-/*
-All the code below is for game logic
-*/
+
 document.addEventListener("keydown",
     function(E)
     {
